@@ -37,6 +37,7 @@ pub static BUILTINS: &[(&str, Func)] = &[
     ("printf", printf as Func),
     ("index", index as Func),
     ("call", call as Func),
+    ("slice", slice as Func),
 ];
 
 macro_rules! val {
@@ -542,6 +543,78 @@ fn cmp(left: &Value, right: &Value) -> Option<Ordering> {
         (&Value::String(ref l), &Value::String(ref r)) => l.partial_cmp(r),
         (&Value::Array(ref l), &Value::Array(ref r)) => l.len().partial_cmp(&r.len()),
         _ => None,
+    }
+}
+
+pub fn slice(args: &[Value]) -> Result<Value, FuncError> {
+    if args.is_empty() {
+        return Err(FuncError::ExactlyXArgs("slice".to_string(), 1));
+    }
+    match &args[0] {
+        Value::String(s) => {
+            let mut indices = Vec::new();
+            for arg in &args[1..] {
+                if let Value::Number(n) = arg {
+                    if let Some(i) = n.as_i64() {
+                        indices.push(i as usize);
+                    } else {
+                        return Err(FuncError::Generic("slice bounds out of range".to_string()));
+                    }
+                } else {
+                    return Err(FuncError::Generic(
+                        "slice bounds must be numbers".to_string(),
+                    ));
+                }
+            }
+            let result = match indices.len() {
+                0 => s.clone(),
+                1 => s[indices[0]..].to_string(),
+                2 => s[indices[0]..indices[1]].to_string(),
+                3 => {
+                    // Go 语法中的 x[1:2:3] 在 Rust 中不直接支持 capacity，
+                    // 这里简化处理，只取 slice[1..2]
+                    if indices[0] <= indices[1] && indices[1] <= s.len() {
+                        s[indices[0]..indices[1]].to_string()
+                    } else {
+                        return Err(FuncError::Generic("slice bounds out of range".to_string()));
+                    }
+                }
+                _ => return Err(FuncError::ExactlyXArgs("a".to_string(), 4)),
+            };
+            Ok(Value::String(result))
+        }
+        Value::Array(arr) => {
+            let mut indices = Vec::new();
+            for arg in &args[1..] {
+                if let Value::Number(n) = arg {
+                    if let Some(i) = n.as_i64() {
+                        indices.push(i as usize);
+                    } else {
+                        return Err(FuncError::Generic("slice bounds out of range".to_string()));
+                    }
+                } else {
+                    return Err(FuncError::Generic(
+                        "slice bounds must be numbers".to_string(),
+                    ));
+                }
+            }
+            let result = match indices.len() {
+                0 => arr.clone(),
+                1 => arr[indices[0]..].to_vec(),
+                2 => arr[indices[0]..indices[1]].to_vec(),
+                3 => {
+                    // 同样简化处理
+                    if indices[0] <= indices[1] && indices[1] <= arr.len() {
+                        arr[indices[0]..indices[1]].to_vec()
+                    } else {
+                        return Err(FuncError::Generic("slice bounds out of range".to_string()));
+                    }
+                }
+                _ => return Err(FuncError::ExactlyXArgs("Doesn't engouh arg".to_string(), 4)),
+            };
+            Ok(Value::Array(result))
+        }
+        _ => Err(FuncError::Generic("slice".to_string())),
     }
 }
 

@@ -507,7 +507,6 @@ node!(NumberNode {
 });
 
 impl NumberNode {
-    #[cfg_attr(feature = "cargo-clippy", allow(clippy::float_cmp))]
     pub fn new(
         tr: TreeId,
         pos: Pos,
