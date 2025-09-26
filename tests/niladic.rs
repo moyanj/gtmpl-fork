@@ -1,6 +1,6 @@
 use anyhow::anyhow;
-use gtmpl::{Func, FuncError, Value};
 use gtmpl_derive::Gtmpl;
+use gtmpl_moyan::{Func, FuncError, Value};
 
 fn plus_one(args: &[Value]) -> Result<Value, FuncError> {
     if let Value::Object(ref o) = &args[0] {
@@ -22,6 +22,6 @@ struct AddMe {
 #[test]
 fn simple_niladic_method() {
     let add_me = AddMe { num: 42, plus_one };
-    let output = gtmpl::template("The answer is: {{ .plus_one }}", add_me);
+    let output = gtmpl_moyan::template("The answer is: {{ .plus_one }}", add_me);
     assert_eq!(&output.unwrap(), "The answer is: 43");
 }

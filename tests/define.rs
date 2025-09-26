@@ -1,5 +1,5 @@
-use gtmpl::{Context, Template};
 use gtmpl_derive::Gtmpl;
+use gtmpl_moyan::{Context, Template};
 
 #[test]
 fn simple_define() {
